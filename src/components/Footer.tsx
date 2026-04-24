@@ -25,7 +25,7 @@ const Footer = () => {
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
               <img src={Logo} alt="Logo" className="w-12 h-12" />
-              <span className="text-3xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent italic">
+              <span className="text-3xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 bg-clip-text text-transparent ">
                 Kawai World
               </span>
             </div>

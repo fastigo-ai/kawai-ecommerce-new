@@ -1,4 +1,3 @@
-// Navbar.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,36 +16,62 @@ import { useCart } from "../contexts/CartContext";
 import Logo from "../assest/logoA.png";
 import UserDropdown from "./UserDropdown";
 import SignInModal from "./SignInModal";
-import { getStoreProducts } from "../APi/api";
+import { getAllProducts } from "../APi/api";
+
+const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 /* ---------------- DROPDOWN ITEM ---------------- */
-
 const DropdownItem = ({ item }) => {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div className="relative group">
+    <div
+      className="relative group/item"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <Link
         to={item.path || "#"}
-        className="block py-1 font-medium text-foreground hover:text-secondary flex justify-between items-center"
+        className={cn(
+          "flex justify-between items-center px-4 py-2.5 my-0.5 rounded-lg font-medium transition-all duration-200",
+          "hover:bg-pink-50 hover:text-pink-600 text-slate-700"
+        )}
       >
         {item.name}
-        {item.children && <ChevronRight size={16} />}
+        {item.children && (
+          <ChevronRight 
+            size={14} 
+            className={cn("transition-transform", hovered ? "translate-x-1" : "")} 
+          />
+        )}
       </Link>
 
-      {item.children && (
-        <div className="absolute left-full top-0 ml-0 hidden group-hover:block z-50">
-          <div className="bg-card border rounded-xl shadow-lg p-4 min-w-[180px]">
+      <AnimatePresence>
+        {item.children && hovered && (
+          <motion.div
+            className="absolute left-[98%] top-0 ml-1 bg-white border border-slate-100 rounded-2xl shadow-xl p-3 min-w-[200px] z-[60]"
+            initial={{ opacity: 0, x: 10, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 10, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          >
             {item.children.map((child) => (
-              <DropdownItem key={child.name} item={child} />
+              <Link
+                key={child.name}
+                to={child.path}
+                className="block px-4 py-2 text-sm font-medium text-slate-600 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+              >
+                {child.name}
+              </Link>
             ))}
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 /* ---------------- NAVBAR ---------------- */
-
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -59,15 +84,13 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState(null);
-  const [isScrolled, setIsScrolled] = useState(false);
 
-  /* ---------- SEARCH STATES ---------- */
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const searchRef = useRef(null);
+  const userDropdownRef = useRef(null);
 
-  /* ---------- MENU ITEMS ---------- */
   const menuItems = [
     {
       name: "Products",
@@ -158,7 +181,6 @@ const Navbar = () => {
     },
   ];
 
-  /* ---------- RESTORE AUTH ---------- */
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
@@ -167,7 +189,7 @@ const Navbar = () => {
     }
   }, [dispatch]);
 
-  /* ---------- SEARCH API (DEBOUNCED) ---------- */
+  // Enhanced Search Logic
   useEffect(() => {
     if (!searchTerm.trim()) {
       setResults([]);
@@ -177,13 +199,9 @@ const Navbar = () => {
     const delay = setTimeout(async () => {
       try {
         setIsLoadingProducts(true);
-
-        const res = await getStoreProducts({
-          search: searchTerm.trim(),
-        });
-
-        // ✅ Correct response extraction
-        setResults(res?.products || []);
+        const res = await getAllProducts({ search: searchTerm.trim() });
+        const products = res?.data?.products || res?.products || [];
+        setResults(products);
       } catch (err) {
         console.error("Search error:", err);
         setResults([]);
@@ -195,100 +213,86 @@ const Navbar = () => {
     return () => clearTimeout(delay);
   }, [searchTerm]);
 
-  /* ---------- CLICK OUTSIDE SEARCH ---------- */
   useEffect(() => {
     const handler = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
         setResults([]);
       }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
     };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
-
-  /* ---------- SCROLL EFFECT ---------- */
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const handleLogout = () => dispatch(signOut());
 
   return (
-    <nav 
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? "bg-white/70 backdrop-blur-lg border-b shadow-lg py-2" 
-          : "bg-white border-b py-4"
-      }`}
-    >
+    <nav className="sticky top-0 z-50 bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* LOGO */}
           <Link to="/">
             <img src={Logo} alt="logo" className="w-12 h-12 rounded-full" />
           </Link>
 
           {/* DESKTOP MENU */}
-{/* DESKTOP MENU */}
-<div className="hidden md:flex space-x-8">
-  {menuItems.map((item) => (
-    <div
-      key={item.name}
-      className="relative"
-      onMouseEnter={() => setHoveredMenu(item.name)}
-      onMouseLeave={() => setHoveredMenu(null)}
-    >
-      <span className="cursor-pointer font-semibold flex items-center gap-1">
-        {item.name}
-        <ChevronDown size={16} />
-      </span>
+          <div className="hidden md:flex space-x-10 h-full">
+            {menuItems.map((item) => (
+              <div
+                key={item.name}
+                className="relative group flex items-center h-full"
+                onMouseEnter={() => setHoveredMenu(item.name)}
+                onMouseLeave={() => setHoveredMenu(null)}
+              >
+                <span className={cn(
+                  "cursor-pointer font-semibold text-slate-700 hover:text-pink-500 transition-colors flex items-center gap-1 py-2",
+                  hoveredMenu === item.name ? "text-pink-500" : ""
+                )}>
+                  {item.name}
+                  <ChevronDown size={16} className={cn("transition-transform duration-300", hoveredMenu === item.name ? "rotate-180" : "")} />
+                </span>
 
-      {/* DROPDOWN */}
-      <AnimatePresence>
-        {hoveredMenu === item.name && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute top-full left-0 pt-2 z-50"
-          >
-            <div className="bg-card border rounded-xl shadow p-6 min-w-[220px]">
-              {item.subCategories.map((sub) => (
-                <DropdownItem key={sub.name} item={sub} />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  ))}
-</div>
+                <AnimatePresence>
+                  {hoveredMenu === item.name && (
+                    <motion.div
+                      className="absolute top-[90%] left-0 bg-white border border-slate-100 rounded-2xl shadow-xl p-4 min-w-[240px] z-50"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {item.subCategories.map((sub) => (
+                        <DropdownItem key={sub.name} item={sub} />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
 
-
-          {/* RIGHT ICONS */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* SEARCH */}
+          <div className="flex items-center gap-3">
+            {/* SEARCH BOX */}
             <div className="relative" ref={searchRef}>
               {isSearchOpen ? (
-                <>
+                <div className="relative flex items-center">
                   <motion.div
                     initial={{ width: 0, opacity: 0 }}
                     animate={{ width: "auto", opacity: 1 }}
-                    className="relative flex items-center"
+                    className="flex items-center"
                   >
                     <input
+                      autoFocus
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search..."
-                      className="w-32 xs:w-40 sm:w-64 h-10 px-3 sm:px-4 pr-10 border rounded-full bg-white/50 focus:bg-white transition-all outline-none border-pink-200 focus:border-pink-500 text-sm"
+                      placeholder="Search products..."
+                      className="w-48 lg:w-64 h-10 px-4 pr-10 border rounded-full focus:outline-none focus:ring-2 focus:ring-pink-500/20 border-pink-100"
                     />
                     <X
-                      className="absolute right-3 cursor-pointer text-muted-foreground hover:text-pink-500"
-                      size={16}
+                      className="absolute right-3 top-2.5 cursor-pointer text-slate-400 hover:text-pink-500 transition-colors"
+                      size={18}
                       onClick={() => {
                         setIsSearchOpen(false);
                         setSearchTerm("");
@@ -297,174 +301,141 @@ const Navbar = () => {
                     />
                   </motion.div>
 
+                  {/* SEARCH RESULTS DROPDOWN */}
                   <AnimatePresence>
                     {searchTerm && (
                       <motion.div 
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-12 right-0 w-[280px] sm:w-80 bg-white border rounded-2xl shadow-2xl max-h-[400px] overflow-y-auto z-50 p-2"
+                        className="absolute top-12 right-0 w-72 md:w-80 bg-white border border-slate-100 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[100] p-1"
                       >
                         {isLoadingProducts ? (
-                          <div className="flex flex-col items-center p-8 space-y-2">
-                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                              <Search size={20} className="text-pink-500" />
-                            </motion.div>
-                            <p className="text-xs text-muted-foreground">Searching magical products...</p>
+                          <div className="p-8 text-center">
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="inline-block w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full mb-2"
+                            />
+                            <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Searching magical treasures...</p>
                           </div>
-                        ) : results.length ? (
-                          results.map((p) => {
-                            const firstVariant = p.variants?.[0];
-                            const imageSrc =
-                              firstVariant?.images?.[0]?.imageUrl ||
-                              p.images?.[0]?.imageUrl ||
-                              "https://via.placeholder.com/50";
-
-                            return (
-                              <motion.div
-                                key={p._id}
-                                whileHover={{ x: 5, backgroundColor: "rgba(244, 244, 245, 0.5)" }}
-                                className="flex gap-3 p-3 rounded-xl cursor-pointer transition-colors"
-                                onClick={() => (
-                                  navigate(`/product/${p.id}`),
-                                  setResults([]),
-                                  setIsSearchOpen(false),
-                                  setSearchTerm("")
-                                )}
-                              >
-                                <img
-                                  src={imageSrc}
-                                  alt={p.name}
-                                  className="w-12 h-12 rounded-lg object-cover border border-pink-100"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-bold text-foreground line-clamp-1">
-                                    {p.name}
-                                  </p>
-                                  <p className="text-xs font-bold text-pink-500">
-                                    ₹{firstVariant?.salePrice || firstVariant?.price}
-                                  </p>
+                        ) : results.length > 0 ? (
+                          <div className="p-1 space-y-1">
+                            {results.map((p) => {
+                              const title = p.name || p.title || "Product";
+                              const price = p.price || p.variants?.[0]?.price || "--";
+                              const imageSrc = p.images?.[0]?.imageUrl || p.image?.[0]?.src || p.variants?.[0]?.image?.[0]?.src || "https://via.placeholder.com/50";
+                              
+                              return (
+                                <div
+                                  key={p._id || p.id}
+                                  className="flex gap-3 p-3 hover:bg-pink-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                                  onClick={() => {
+                                    navigate(`/product/${p.id || p._id}`);
+                                    setIsSearchOpen(false);
+                                    setSearchTerm("");
+                                  }}
+                                >
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-100 flex-shrink-0">
+                                    <img src={imageSrc} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                  </div>
+                                  <div className="flex-1 overflow-hidden flex flex-col justify-center">
+                                    <p className="text-sm font-bold text-slate-800 truncate group-hover:text-pink-600 transition-colors">{title}</p>
+                                    <p className="text-xs text-pink-500 font-black">₹{price}</p>
+                                  </div>
                                 </div>
-                              </motion.div>
-                            );
-                          })
+                              );
+                            })}
+                          </div>
                         ) : (
                           <div className="p-8 text-center">
-                            <p className="text-2xl mb-2">🎈</p>
-                            <p className="text-sm text-muted-foreground font-medium">
-                              No magical items found
-                            </p>
+                            <p className="text-3xl mb-2">🎈</p>
+                            <p className="text-sm text-slate-400 font-bold">No products found</p>
                           </div>
                         )}
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </>
+                </div>
               ) : (
-                <Search
-                  size={20}
-                  className="cursor-pointer hover:text-pink-500 transition-colors"
-                  onClick={() => setIsSearchOpen(true)}
-                />
+                <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-pink-50 rounded-full transition-colors group">
+                  <Search size={22} className="text-slate-600 group-hover:text-pink-500" />
+                </button>
               )}
             </div>
 
-            {/* CART */}
-            <button onClick={toggleCart} className="relative hover:text-pink-500 transition-colors">
-              <ShoppingCart size={20} />
+            <button onClick={toggleCart} className="relative p-2 hover:bg-pink-50 rounded-full group transition-colors">
+              <ShoppingCart size={22} className="text-slate-600 group-hover:text-pink-500" />
               {getItemCount() > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 text-[10px] bg-red-500 text-white rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-5 h-5 text-[10px] bg-pink-500 text-white rounded-full flex items-center justify-center font-black shadow-lg shadow-pink-200">
                   {getItemCount()}
                 </span>
               )}
             </button>
 
-            {/* USER */}
-            <button 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="hover:text-pink-500 transition-colors"
-            >
-              <User size={20} />
-            </button>
+            <div className="relative" ref={userDropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+                className={cn(
+                  "p-2 rounded-full transition-all duration-200",
+                  isDropdownOpen ? "bg-pink-100 text-pink-600" : "hover:bg-pink-50 text-slate-600"
+                )}
+              >
+                <User size={22} />
+              </button>
+              <UserDropdown
+                isOpen={isDropdownOpen}
+                isAuthenticated={!!user}
+                user={user}
+                onLogout={handleLogout}
+                onSignInClick={() => setIsModalOpen(true)}
+                onClose={() => setIsDropdownOpen(false)}
+              />
+            </div>
 
-            <UserDropdown
-              isOpen={isDropdownOpen}
-              isAuthenticated={!!user}
-              user={user} // ✅ PASS USER
-              onLogout={handleLogout}
-              onSignInClick={() => setIsModalOpen(true)}
-              onClose={() => setIsDropdownOpen(false)}
-            />
-
-            {/* MOBILE MENU TOGGLE */}
-            <button
-              className="md:hidden p-1 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            <button className="md:hidden p-2 text-slate-600 hover:text-pink-500" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
           </div>
         </div>
       </div>
-
+      
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden bg-card border-t shadow"
+            className="md:hidden bg-white border-t overflow-hidden shadow-inner"
           >
-            <div className="px-4 py-4 space-y-4">
-              {menuItems.map((item) => (
-                <div key={item.name}>
-                  {/* CATEGORY HEADER */}
-                  <button
-                    onClick={() =>
-                      setOpenMobileCategory(
-                        openMobileCategory === item.name ? null : item.name
-                      )
-                    }
-                    className="w-full flex justify-between items-center font-semibold py-2"
-                  >
-                    {item.name}
-                    <ChevronDown
-                      className={`transition-transform ${
-                        openMobileCategory === item.name ? "rotate-180" : ""
-                      }`}
-                      size={18}
-                    />
-                  </button>
-
-                  {/* SUBCATEGORIES */}
-                  <AnimatePresence>
+             <div className="px-4 py-6 space-y-2">
+               {menuItems.map((item) => (
+                 <div key={item.name} className="border-b border-slate-50 pb-2">
+                   <button 
+                    onClick={() => setOpenMobileCategory(openMobileCategory === item.name ? null : item.name)}
+                    className="w-full flex justify-between items-center font-bold py-3 text-slate-800"
+                   >
+                     {item.name}
+                     <ChevronDown className={cn("transition-transform duration-300", openMobileCategory === item.name ? "rotate-180" : "")} size={20} />
+                   </button>
+                   <AnimatePresence>
                     {openMobileCategory === item.name && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="pl-4 space-y-2"
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="pl-4 space-y-4 pb-4 mt-2"
                       >
-                        {item.subCategories.map((sub) => (
+                        {item.subCategories.map(sub => (
                           <div key={sub.name}>
-                            <Link
-                              to={sub.path || "#"}
-                              onClick={() => setIsMenuOpen(false)}
-                              className="block py-1 font-medium text-muted-foreground"
-                            >
+                            <Link key={sub.name} to={sub.path} onClick={() => setIsMenuOpen(false)} className="block text-slate-800 font-bold mb-2">
                               {sub.name}
                             </Link>
-
-                            {/* CHILDREN */}
                             {sub.children && (
-                              <div className="pl-4 mt-1 space-y-1">
-                                {sub.children.map((child) => (
-                                  <Link
-                                    key={child.name}
-                                    to={child.path}
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="block text-sm text-muted-foreground"
-                                  >
+                              <div className="pl-4 space-y-3">
+                                {sub.children.map(child => (
+                                  <Link key={child.name} to={child.path} onClick={() => setIsMenuOpen(false)} className="block text-slate-500 text-sm font-medium">
                                     {child.name}
                                   </Link>
                                 ))}
@@ -474,17 +445,21 @@ const Navbar = () => {
                         ))}
                       </motion.div>
                     )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
+                   </AnimatePresence>
+                 </div>
+               ))}
+             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <SignInModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSignIn={undefined} />
+      <SignInModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSignIn={(userData) => console.log("Login success", userData)}
+      />
     </nav>
   );
 };
 
-export default Navbar;
+export default Navbar; 

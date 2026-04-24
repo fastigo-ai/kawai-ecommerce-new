@@ -14,7 +14,7 @@ const UserDropdown = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="absolute right-0 mt-[50px] w-56 bg-card border border-border rounded-lg shadow-xl z-50"
+          className="absolute right-0 mt-[10px] w-56 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
