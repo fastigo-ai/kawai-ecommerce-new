@@ -205,6 +205,14 @@
   .glass-card {
     @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl;
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @keyframes bounce-gentle {

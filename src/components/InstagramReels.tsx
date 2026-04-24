@@ -1,34 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Instagram, ExternalLink, Play, Heart, MessageCircle, Share2 } from "lucide-react";
 
+
+import Play1 from "../assest/video/get.mp4";
+import Play2 from "../assest/video/get1.mp4";
+import Play3 from "../assest/video/get2.mp4";
+
 const InstagramReels = () => {
-  const [reels] = useState([
-    {
-      id: "1",
-      code: "DQCrBzNEzce",
-      url: "https://www.instagram.com/reel/DQCrBzNEzce/embed",
-      link: "https://www.instagram.com/reel/DQCrBzNEzce/",
-      views: "12.4k",
-      likes: "1.2k"
-    },
-    {
-      id: "2",
-      code: "DQ3bhaVjO8W",
-      url: "https://www.instagram.com/reel/DQ3bhaVjO8W/embed",
-      link: "https://www.instagram.com/reel/DQ3bhaVjO8W/",
-      views: "8.9k",
-      likes: "942"
-    },
-    {
-      id: "3",
-      code: "DQZRWqCgbFY",
-      url: "https://www.instagram.com/reel/DQZRWqCgbFY/embed",
-      link: "https://www.instagram.com/reel/DQZRWqCgbFY/",
-      views: "15.2k",
-      likes: "2.1k"
-    },
-  ]);
+  const videoRefs = useRef([]);
+
+  const reels = [
+    { id: "1", video: Play1 },
+    { id: "2", video: Play2 },
+    { id: "3", video: Play3 },
+  ];
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            video.play();
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.6 } // 60% visible → play
+    );
+
+    videoRefs.current.forEach((video) => {
+      if (video) observer.observe(video);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
 
   return (
     <section className="py-32 bg-white overflow-hidden">
@@ -75,76 +84,25 @@ const InstagramReels = () => {
         </div>
 
         {/* Reels Container (Horizontal Scroll on Mobile) */}
-        <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-10 overflow-x-auto lg:overflow-x-visible pb-12 snap-x no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-12 snap-x no-scrollbar pl-6 pr-4 md:px-0 md:mx-0">
           {reels.map((reel, index) => (
             <motion.div
               key={reel.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.8 }}
-              className="group min-w-[280px] sm:min-w-[320px] lg:min-w-0 snap-start"
+              whileHover={{ scale: 1.03 }}
+              className="min-w-[85vw] md:min-w-0 bg-white rounded-3xl shadow-xl overflow-hidden relative snap-start"
             >
-              <div className="relative aspect-[9/16] rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] bg-gray-100 border-4 lg:border-8 border-gray-900">
-                
-                {/* Embed */}
-                <iframe
-                  src={reel.url}
-                  className="w-full h-full object-cover"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowTransparency
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                />
-
-                {/* Glass Interaction Overlay (Appears on Hover) */}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-between p-8 pointer-events-none">
-                  <div className="flex justify-between items-start">
-                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center">
-                       <Instagram size={20} className="text-white" />
-                    </div>
-                    <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest">
-                       {reel.views} Views
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                     <div className="flex flex-col gap-4 items-end">
-                        <div className="flex flex-col items-center gap-1">
-                           <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                              <Heart size={20} className="text-white" />
-                           </div>
-                           <span className="text-[10px] font-black text-white">{reel.likes}</span>
-                        </div>
-                        <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                           <MessageCircle size={20} className="text-white" />
-                        </div>
-                        <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                           <Share2 size={20} className="text-white" />
-                        </div>
-                     </div>
-                     
-                     <motion.a 
-                        href={reel.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="pointer-events-auto block w-full py-4 bg-white text-gray-900 rounded-2xl font-black text-center text-xs uppercase tracking-widest shadow-2xl"
-                     >
-                        Watch on Instagram
-                     </motion.a>
-                  </div>
-                </div>
-
-                {/* Default Play Icon Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center group-hover:hidden transition-all duration-300">
-                   <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center">
-                      <Play size={32} className="text-white fill-white" />
-                   </div>
-                </div>
-
-                {/* Instagram Border Glow */}
-                <div className="absolute inset-0 border-[3px] border-white/20 rounded-[2.8rem] pointer-events-none group-hover:border-pink-500/50 transition-all duration-500" />
+              <div className="absolute top-4 left-4 z-10 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                Reel #{index + 1}
               </div>
+
+              <video
+                ref={(el) => (videoRefs.current[index] = el)}
+                src={reel.video}
+                muted
+                loop
+                playsInline
+                className="w-full h-[500px] object-cover"
+              />
             </motion.div>
           ))}
         </div>
