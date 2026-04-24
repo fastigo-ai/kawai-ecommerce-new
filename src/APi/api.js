@@ -211,18 +211,14 @@ export const createOrder = async (orderData) => {
 
 export const getUserOrders = async (userId) => {
   try {
-    const response = await fetch(`${BASE_URL}/orders?userId=${userId}`);
-    const data = await response.json();
-
-    if (!response.ok) {
-      // If the status code is not 2xx, throw the error from server response
-      throw new Error(data.message || 'Failed to fetch order');
-    }
-
-    return data;
+    const response = await axios.get(`${BASE_URL}/orders`, {
+      params: { userId }
+    });
+    return response.data;
   } catch (error) {
-    console.error('API Error:', error.message);
-    throw error;
+    const errorMsg = error.response?.data?.message || 'Failed to fetch order';
+    console.error('API Error:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 
@@ -231,8 +227,8 @@ export const getUserOrders = async (userId) => {
 
 export const createPaymentOrder = async (orderId) => {
   try {
-    const response = await axios.post(`${BASE_URL}/orders/${orderId}/checkout`,);
-    return response.data.data;
+    const response = await axios.post(`${BASE_URL}/orders/${orderId}/checkout`);
+    return response.data.checkoutOrder || response.data.data || response.data;
   } catch (error) {
     console.error('Error creating payment order:', error);
     throw error;
@@ -250,11 +246,36 @@ export const verifyPayment = async (orderId, paymentId, signature) => {
 };
 
 
-export const createShiprocketCheckout = async (items, redirectUrl) => {
-  const res = await axios.get(`${BASE_URL}/shiprocket/checkout/create`, {
-    items,
-    redirectUrl,
-  });
-  return res.data;
+export const createShiprocketCheckout = async (data) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/shiprocket/checkout/create`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating Shiprocket checkout:", error);
+    throw error;
+  }
+};
+
+export const updateShiprocketOrderStatus = async (orderId, shiprocketId) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/shiprocket/checkout/update-status`, {
+      orderId,
+      shiprocketId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating Shiprocket order status:", error);
+    throw error;
+  }
+};
+
+export const getRazorpayKey = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/razorpay/key`);
+    return response.data.key || response.data.data?.key;
+  } catch (error) {
+    console.error("Error fetching Razorpay key:", error);
+    throw error;
+  }
 };
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { updateShiprocketOrderStatus } from "../APi/api";
 import { CheckCircle } from "lucide-react";
 import { useCart } from "../contexts/CartContext"; // adjust path if needed
 
@@ -17,17 +17,11 @@ const CheckoutSuccess = () => {
     if (!orderId || !oid) return;
 
     const updateOrder = async () => {
-      const baseurl = "https://oyster-app-u5rld.ondigitalocean.app/api";
-      // const baseurl = "http://localhost:1209/api";
-      
       try {
-        await axios.post(`${baseurl}/shiprocket/checkout/update-status`, {
-          orderId,
-          shiprocketId: oid,
-        });
+        await updateShiprocketOrderStatus(orderId, oid);
 
         // ✅ Clear cart if status is SUCCESS
-        if (ost === "SUCCESS" ) {
+        if (ost === "SUCCESS") {
           clearCart();
         }
       } catch (err) {

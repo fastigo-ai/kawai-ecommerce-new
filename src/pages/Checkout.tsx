@@ -19,7 +19,8 @@ import { createOrder,createShiprocketCheckout } from "../APi/api.js";
 
 import {
   getRazorpayKey,
-  verifyPayment
+  verifyPayment,
+  createPaymentOrder
 } from "../APi/api.js";
 
 // TypeScript declaration for Razorpay (kept for compatibility)
@@ -28,8 +29,6 @@ declare global {
     Razorpay: any;
   }
 }
-// export const BASE_URL = 'https://monkfish-app-phfed.ondigitalocean.app/api';
-export const BASE_URL = 'http://localhost:1209/api';
 // const razorpayKey = "rzp_test_Rd9FMehTGXSduO";
 // Small fallback map: color name -> hex (used if cart item doesn't already include a hex)
 const COLOR_MAP = {
@@ -146,18 +145,6 @@ const Checkout = () => {
     });
   };
 
-  const createPaymentOrder = async (orderId) => {
-    try {
-      console.log("Creating payment order for order ID:", orderId);
-      const response = await axios.post(`${BASE_URL}/orders/${orderId}/checkout`);
-      console.log("Payment order created:", response.data);
-      return response.data.checkoutOrder;
-
-    } catch (error) {
-      console.error('Error creating payment order:', error);
-      throw error;
-    }
-  };
 
   // Razorpay integration
 const displayRazorpay = async (order) => {

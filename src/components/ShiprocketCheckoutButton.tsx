@@ -5,6 +5,7 @@ import { selectUser } from "../redux/slices/authSlice";
 import { useShiprocketScript } from "../hooks/useShiprocketScript";
 import SignInModal from "../components/SignInModal";
 import { motion } from "framer-motion";
+import { createShiprocketCheckout } from "../APi/api";
 
 declare global {
   interface Window {
@@ -57,30 +58,13 @@ export default function ShiprocketCheckoutButton() {
     const redirectUrl = `${window.location.origin}/order/success?userId=${user.data._id}`;
 
     setLoading(true);
-
-    const baseurl = "https://oyster-app-u5rld.ondigitalocean.app/api";
-    // const baseurl = "http://localhost:1209/api";
-
     try {
-      const res = await fetch(
-        `${baseurl}/shiprocket/checkout/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ items, redirectUrl,userId: user.data._id }),
-        }
-      );
+      const data = await createShiprocketCheckout({
+        items,
+        redirectUrl,
+        userId: user.data._id
+      });
 
-      // 🔐 Session expired
-      if (res.status === 401) {
-        setIsModalOpen(true);
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
       setLoading(false);
 
       const token = data?.result?.result?.token;
@@ -96,10 +80,15 @@ export default function ShiprocketCheckoutButton() {
         event.nativeEvent,
         token
       );
-    } catch (error) {
-      console.error("Checkout error:", error);
+    } catch (error: any) {
+      // 🔐 Session expired
+      if (error.response?.status === 401) {
+        setIsModalOpen(true);
+      } else {
+        console.error("Checkout error:", error);
+        alert("Checkout failed. Please try again.");
+      }
       setLoading(false);
-      alert("Checkout failed. Please try again.");
     }
   };
 
