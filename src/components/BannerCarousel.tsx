@@ -9,8 +9,9 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 
-import banner1 from '../assest/banner1.jpeg';
-import banner2 from '../assest/banner2.jpeg';
+import banner1 from '../assest/banner3.jpeg';
+import banner2 from '../assest/banner4.jpeg';
+import banner3 from '../assest/banner5.jpeg';
 
 const banners = [
   {
@@ -31,7 +32,7 @@ const banners = [
   },
   {
     id: 3,
-    img: "https://images.pexels.com/photos/8612964/pexels-photo-8612964.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+    img: banner3,
     title: "Creative Studio",
     subtitle: "Art supplies that spark big, bright ideas.",
     accent: "text-purple-500",
