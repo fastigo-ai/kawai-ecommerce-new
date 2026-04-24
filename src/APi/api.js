@@ -3,7 +3,7 @@ import { signIn } from "../redux/slices/authSlice";
 
 // Base URL for the API endpoints
 // export const BASE_URL = 'https://monkfish-app-phfed.ondigitalocean.app/api';
-export const BASE_URL = 'https://oyster-app-u5rld.ondigitalocean.app/api';
+export const BASE_URL = 'https://kawaiworld-nkppi.ondigitalocean.app/api';
 // export const BASE_URL = 'http://localhost:1209/api';
 
 /**
