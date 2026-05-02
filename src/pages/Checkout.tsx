@@ -244,8 +244,10 @@ const displayRazorpay = async (order) => {
       .replace(/-/g, "")}-${Math.floor(Math.random() * 1000)}`,
     currency: "INR",
     items: state.items.map((item) => ({
-      productId: item.id,
+      productId: item.productId,
       variantId: item.variantId,
+      shiprocketProductId: item.shiprocketProductId,
+      shiprocketVariantId: item.shiprocketVariantId,
       quantity: item.quantity,
       unitPrice: item.price,
       totalPrice: parseFloat((item.price * item.quantity).toFixed(2)),

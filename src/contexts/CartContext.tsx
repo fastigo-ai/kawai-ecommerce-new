@@ -6,6 +6,7 @@ import React, { createContext, useContext, useReducer, ReactNode, useEffect } fr
  */
 export interface CartItem {
   id: string | number;
+  productId: string;
   name: string;
   price: number;              // original price
   salePrice?: number;         // optional sale price (if present and < price will be used)
@@ -14,8 +15,11 @@ export interface CartItem {
   selectedColor?: string | null;      // color name (e.g. "Blue")
   selectedColorHex?: string | null;   // color hex from DB (e.g. "#3b82f6")
   variantId?: string | null;          // variant id if applicable
+  variantName?: string | null;
   sku?: string | null;
   category?: string | null;
+  shiprocketProductId?: string | number | null;
+  shiprocketVariantId?: string | number | null;
 }
 
 interface CartState {

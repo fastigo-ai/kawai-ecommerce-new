@@ -120,12 +120,11 @@ const ProductDetail = () => {
       name: product.name,
       price,
       image: cartImage,
-      variantId: selectedVariant?._id || product._id,
+      variantId: selectedVariant?.shiprocketVariantId || product.shiprocketProductId,
       variantName: selectedVariant?.variantName || "Default",
       sku: selectedVariant?.sku || product.sku,
       shiprocketProductId: product.shiprocketProductId,
-      shiprocketVariantId:
-        selectedVariant?.shiprocketVariantId || null,
+      shiprocketVariantId: selectedVariant?.shiprocketVariantId || product.shiprocketProductId,
     });
 
     toast({

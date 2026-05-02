@@ -47,6 +47,8 @@ export default function ShiprocketCheckoutButton() {
 
     const items = state.items.map((item) => ({
       id: String(item.variantId), // Shiprocket variant_id
+      variantId: item.variantId,
+      shiprocketVariantId: item.shiprocketVariantId,
       quantity: item.quantity,
       price: item.price,
       name: item.name,
