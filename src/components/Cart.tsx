@@ -66,7 +66,6 @@ const CartPage = () => {
                 className="flex gap-4 p-4 bg-white rounded-2xl border shadow-sm cursor-pointer hover:shadow-md transition"
                 onClick={() => {
                   navigate(`/product/${item.productId}`);
-                  closeCart();
                 }}
               >
                 {/* IMAGE */}
@@ -104,9 +103,13 @@ const CartPage = () => {
                   {/* QUANTITY */}
                   <div className="flex items-center gap-3 mt-4">
                     <button
-                      onClick={() =>
-                        updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.id, Math.max(0, item.quantity - 1), {
+                          variantId: item.variantId,
+                          selectedColor: item.selectedColor,
+                        });
+                      }}
                       className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
                     >
                       <Minus size={14} />
@@ -115,7 +118,13 @@ const CartPage = () => {
                     <span className="font-semibold">{item.quantity}</span>
 
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.id, item.quantity + 1, {
+                          variantId: item.variantId,
+                          selectedColor: item.selectedColor,
+                        });
+                      }}
                       className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center hover:opacity-90"
                     >
                       <Plus size={14} />
@@ -125,13 +134,14 @@ const CartPage = () => {
 
                 {/* REMOVE */}
                 <button
-                  onClick={() =>
+                  onClick={(e) => {
+                    e.stopPropagation();
                     removeItem({
                       id: item.id,
                       variantId: item.variantId,
                       selectedColor: item.selectedColor,
-                    })
-                  }
+                    });
+                  }}
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <X size={18} />

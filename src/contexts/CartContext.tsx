@@ -34,7 +34,7 @@ type RemovePayload =
   | { id: string | number; variantId?: string | null; selectedColor?: string | null };
 
 type CartAction =
-  | { type: "ADD_ITEM"; payload: Omit<CartItem, "quantity"> }
+  | { type: "ADD_ITEM"; payload: Omit<CartItem, "quantity"> & { quantity?: number } }
   | { type: "REMOVE_ITEM"; payload: RemovePayload }
   | { type: "UPDATE_QUANTITY"; payload: { id: string | number; variantId?: string | null; selectedColor?: string | null; quantity: number } }
   | { type: "CLEAR_CART" }
@@ -87,12 +87,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const existing = state.items.find((it) => sameLineItem(it, payload));
 
       let newItems: CartItem[];
+      const quantityToAdd = payload.quantity ?? 1;
+
       if (existing) {
         newItems = state.items.map((it) =>
-          sameLineItem(it, payload) ? { ...it, quantity: it.quantity + 1 } : it
+          sameLineItem(it, payload) ? { ...it, quantity: it.quantity + quantityToAdd } : it
         );
       } else {
-        newItems = [...state.items, { ...payload, quantity: 1 }];
+        newItems = [...state.items, { ...payload, quantity: quantityToAdd }];
       }
 
       return { ...state, items: newItems, total: calcTotal(newItems) };
